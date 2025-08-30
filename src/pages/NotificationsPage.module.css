@@ -1,0 +1,68 @@
+.container {
+  padding: 2rem;
+  max-width: 650px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.noNotifications {
+  text-align: center;
+  color: #666;
+  font-size: 1rem;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.list li {
+  background: #f9f9f9;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  transition: transform 0.1s;
+}
+
+.list li:hover {
+  transform: translateY(-2px);
+}
+
+.unread {
+  border-left: 4px solid #007bff;
+}
+
+.read {
+  opacity: 0.6;
+  border-left: 4px solid transparent;
+}
+
+.message {
+  max-width: 80%;
+}
+
+.markReadBtn {
+  background: #007bff;
+  border: none;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.markReadBtn:hover {
+  background: #0056b3;
+}
