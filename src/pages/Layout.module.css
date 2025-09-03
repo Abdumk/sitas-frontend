@@ -1,0 +1,62 @@
+
+  
+  :root{
+  --header-h: 90px;
+  --footer-h: 35px;
+  --sidebar-w: 220px;
+}
+
+.layout {
+  display: grid;
+  grid-template-areas:
+    "header header"
+    "sidebar content"
+    "footer footer";
+  grid-template-rows: var(--header-h) 1fr var(--footer-h);
+  grid-template-columns: var(--sidebar-w) 1fr;
+  height: 100vh;
+  height: 100dvh;
+  gap: 0; /* ✅ Ensure no gap between grid areas */
+  margin: 0;
+  padding: 0;
+}
+
+/* Areas */
+.header { grid-area: header; }
+.footer { grid-area: footer; }
+.sidebar { 
+  grid-area: sidebar; 
+  /* let the Sidebar component control its own look */
+}
+.content {
+  grid-area: content;
+  background: #f8f9fa;
+  padding: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ===== Mobile: collapse to single column, hide sidebar area ===== */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-w: 0px; /* no reserved width on mobile */
+  }
+
+  .layout {
+    grid-template-areas:
+      "header"
+      "content"
+      "footer";
+    grid-template-columns: 1fr;
+    grid-template-rows: var(--header-h) 1fr var(--footer-h);
+  }
+
+  .sidebar {
+    display: none; /* hide desktop sidebar space on mobile */
+  }
+
+  .content {
+    padding: 12px; /* a touch more breathing room */
+  }
+}
+
