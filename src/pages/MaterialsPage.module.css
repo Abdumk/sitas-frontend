@@ -209,9 +209,3 @@ h2 {
     font-size: 14px;
   }
 }
-/* Emergency hide on small screens */
-@media (max-width: 768px) {
-  table[class*="table"] {
-    display: none !important;
-  }
-}
