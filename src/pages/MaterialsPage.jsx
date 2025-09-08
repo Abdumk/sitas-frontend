@@ -1,3 +1,4 @@
+// // src/pages/MaterialsPage.jsx
 // import React, { useEffect, useState } from "react";
 // import axios from "axios";
 // import styles from "./MaterialsPage.module.css";
@@ -21,16 +22,14 @@
 //   });
 //   const [editMaterialId, setEditMaterialId] = useState(null);
 //   const [editInventoryId, setEditInventoryId] = useState(null);
-//   console.log("Projects:", projects);
-//   console.log("Materials:", materials);
-//   console.log("Inventory:", inventory);
+
 //   const token = localStorage.getItem("token");
 
 //   // Fetch all necessary data
 //   useEffect(() => {
 //     fetchProjects();
-//     fetchMaterialsCatalog(); // Fetch all material types
-//     fetchInventory(); // Fetch project inventory data
+//     fetchMaterialsCatalog();
+//     fetchInventory();
 //   }, []);
 
 //   const fetchProjects = () => {
@@ -43,40 +42,29 @@
 //   };
 
 //   const fetchMaterialsCatalog = () => {
-//     // Correct endpoint for fetching all materials
 //     axios
 //       .get("http://localhost:5000/api/materials", {
 //         headers: { Authorization: `Bearer ${token}` },
 //       })
 //       .then((res) => setMaterials(res.data))
-//       // console.log("Fetched inventory data:", res.data);
 //       .catch((err) => console.error("Error fetching materials catalog:", err));
 //   };
 
-//   // const fetchInventory = () => {
-//   //     // Correct endpoint for fetching project inventory
-//   //     axios.get('http://localhost:5000/api/inventory', { headers: { Authorization: `Bearer ${token}` } })
-//   //         .then(res => setInventory(res.data))
-//   //         .catch(err => console.error("Error fetching inventory:", err));
-//   // };
 //   const fetchInventory = () => {
-//     const url = `http://localhost:5000/api/inventory?t=${Date.now()}`; // ✅ Cache bust
+//     const url = `http://localhost:5000/api/inventory?t=${Date.now()}`;
 //     axios
 //       .get(url, { headers: { Authorization: `Bearer ${token}` } })
-//       .then((res) => {
-//         console.log("🔁 Fetched updated inventory:", res.data);
-//         setInventory(res.data);
-//       })
+//       .then((res) => setInventory(res.data))
 //       .catch((err) => console.error("Error fetching inventory:", err));
 //   };
+
 //   const handleMaterialChange = (e) => {
 //     setMaterialForm({ ...materialForm, [e.target.name]: e.target.value });
 //   };
+
 //   const handleInventoryChange = (e) => {
 //     const { name, value } = e.target;
-
 //     if (name === "quantity" || name === "minLevel") {
-//       // Parse as integer, but keep as 0 or empty string
 //       const num = value === "" ? 0 : parseInt(value, 10);
 //       setInventoryForm({ ...inventoryForm, [name]: isNaN(num) ? 0 : num });
 //     } else {
@@ -99,7 +87,7 @@
 //     setEditInventoryId(null);
 //   };
 
-//   // Handler for the Material Catalog Form
+//   // Handle Material Submit
 //   const handleMaterialSubmit = (e) => {
 //     e.preventDefault();
 //     if (editMaterialId) {
@@ -127,52 +115,47 @@
 //     }
 //   };
 
-//   // Handler for the Project Inventory Form
- 
-// // ✅ Submit handler: decide POST vs PUT
-// const handleInventorySubmit = async (e) => {
-//   e.preventDefault();
+//   // Handle Inventory Submit
+//   const handleInventorySubmit = async (e) => {
+//     e.preventDefault();
 
-//   if (!inventoryForm.projectId) return alert("Please select a project");
-//   if (!inventoryForm.materialId) return alert("Please select a material");
-//   if (Number(inventoryForm.quantity) <= 0)
-//     return alert("Quantity must be greater than 0");
+//     if (!inventoryForm.projectId) return alert("Please select a project");
+//     if (!inventoryForm.materialId) return alert("Please select a material");
+//     if (Number(inventoryForm.quantity) <= 0)
+//       return alert("Quantity must be greater than 0");
 
-//   try {
-//     let res;
-//     if (editInventoryId) {
-//       // 🔹 PUT for editing
-//       res = await axios.put(
-//         `http://localhost:5000/api/inventory/${editInventoryId}`,
-//         {
-//           quantity: Number(inventoryForm.quantity),
-//           minLevel: Number(inventoryForm.minLevel),
-//         },
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-//       console.log("✅ Updated inventory:", res.data);
-//     } else {
-//       // 🔹 POST for creating
-//       res = await axios.post(
-//         "http://localhost:5000/api/inventory",
-//         {
-//           projectId: inventoryForm.projectId,
-//           materialId: inventoryForm.materialId,
-//           quantity: Number(inventoryForm.quantity),
-//           minLevel: Number(inventoryForm.minLevel),
-//         },
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-//       console.log("✅ Added to inventory:", res.data);
+//     try {
+//       let res;
+//       if (editInventoryId) {
+//         res = await axios.put(
+//           `http://localhost:5000/api/inventory/${editInventoryId}`,
+//           {
+//             quantity: Number(inventoryForm.quantity),
+//             minLevel: Number(inventoryForm.minLevel),
+//           },
+//           { headers: { Authorization: `Bearer ${token}` } }
+//         );
+//       } else {
+//         res = await axios.post(
+//           "http://localhost:5000/api/inventory",
+//           {
+//             projectId: inventoryForm.projectId,
+//             materialId: inventoryForm.materialId,
+//             quantity: Number(inventoryForm.quantity),
+//             minLevel: Number(inventoryForm.minLevel),
+//           },
+//           { headers: { Authorization: `Bearer ${token}` } }
+//         );
+//       }
+
+//       fetchInventory();
+//       resetInventoryForm();
+//     } catch (err) {
+//       console.error("Error saving inventory:", err);
+//       alert("Save failed: " + (err.response?.data?.msg || "Check console"));
 //     }
+//   };
 
-//     fetchInventory();
-//     resetInventoryForm();
-//   } catch (err) {
-//     console.error("❌ Error saving inventory:", err.response?.data || err.message);
-//     alert("Save failed: " + (err.response?.data?.msg || "Check console"));
-//   }
-// };
 //   const handleEditMaterial = (material) => {
 //     setMaterialForm({
 //       name: material.name,
@@ -183,17 +166,15 @@
 //     setEditMaterialId(material._id);
 //   };
 
-//  // ✅ Editing: store only IDs (not full objects)
-// const handleEditInventory = (item) => {
-//   setInventoryForm({
-//     projectId: item.projectId?._id || item.projectId,
-//     materialId: item.materialId?._id || item.materialId,
-//     quantity: item.quantity,
-//     minLevel: item.minLevel,
-//   });
-//   setEditInventoryId(item._id);
-// };
-
+//   const handleEditInventory = (item) => {
+//     setInventoryForm({
+//       projectId: item.projectId?._id || item.projectId,
+//       materialId: item.materialId?._id || item.materialId,
+//       quantity: item.quantity,
+//       minLevel: item.minLevel,
+//     });
+//     setEditInventoryId(item._id);
+//   };
 
 //   const handleDeleteMaterial = (id) => {
 //     if (window.confirm("Delete this material from the catalog?")) {
@@ -214,27 +195,26 @@
 //         .then(() => fetchInventory());
 //     }
 //   };
-// // ✅ Fix filter to work with either populated or raw materialId
-// const filteredInventory = inventory.filter((item) => {
-//   const material =
-//     typeof item.materialId === "object"
-//       ? item.materialId
-//       : materials.find((m) => m._id.toString() === item.materialId?.toString());
 
-//   if (!material) return false;
+//   // Filter inventory by search
+//   const filteredInventory = inventory.filter((item) => {
+//     const material =
+//       typeof item.materialId === "object"
+//         ? item.materialId
+//         : materials.find((m) => m._id.toString() === item.materialId?.toString());
 
-//   return (
-//     material.name?.toLowerCase().includes(search.toLowerCase()) ||
-//     material.brand?.toLowerCase().includes(search.toLowerCase())
-//   );
-// });
+//     if (!material) return false;
 
-
-//   console.log("Filtered:", filteredInventory);
+//     return (
+//       material.name?.toLowerCase().includes(search.toLowerCase()) ||
+//       material.brand?.toLowerCase().includes(search.toLowerCase())
+//     );
+//   });
 
 //   return (
 //     <div className={styles.container}>
 //       <h1>Material Catalog</h1>
+
 //       {/* Form for adding new material types */}
 //       <form onSubmit={handleMaterialSubmit} className={styles.form}>
 //         <input
@@ -272,9 +252,6 @@
 //           <option value="Piece">Piece</option>
 //           <option value="Liter">Liter</option>
 //           <option value="Mcube">Mcube</option>
-
-
-
 //         </select>
 //         <button type="submit">
 //           {editMaterialId ? "Update Material" : "Add New Material"}
@@ -286,9 +263,9 @@
 //         )}
 //       </form>
 
-//       {/* Table for Material Catalog */}
+//       {/* Table: Materials in Catalog */}
 //       <h2>Materials in Catalog</h2>
-//       <table className={styles.table}>
+//       <table className={styles.table} id="catalog-table">
 //         <thead>
 //           <tr>
 //             <th>Name</th>
@@ -323,9 +300,40 @@
 //         </tbody>
 //       </table>
 
+//       {/* Mobile Cards: Materials in Catalog */}
+//       <div className={styles.cards} id="catalog-cards">
+//         {materials.map((item) => (
+//           <div key={item._id} className={styles.card}>
+//             <h3>{item.name}</h3>
+//             <div className={styles.cardInfo}>
+//               <span>🏷️ Brand:</span>
+//               <span>{item.brand}</span>
+//             </div>
+//             <div className={styles.cardInfo}>
+//               <span>🔬 Type:</span>
+//               <span>{item.type}</span>
+//             </div>
+//             <div className={styles.cardInfo}>
+//               <span>📦 Unit:</span>
+//               <span>{item.unit}</span>
+//             </div>
+//             <div className={styles.cardActions}>
+//               <button onClick={() => handleEditMaterial(item)}>Edit</button>
+//               <button onClick={() => handleDeleteMaterial(item._id)} className={styles.deleteBtn}>
+//                 Delete
+//               </button>
+//             </div>
+//           </div>
+//         ))}
+//         {materials.length === 0 && (
+//           <p className={styles.empty}>No materials in catalog.</p>
+//         )}
+//       </div>
+
 //       <hr className={styles.divider} />
 
 //       <h1>Project Inventory</h1>
+
 //       {/* Search */}
 //       <input
 //         type="text"
@@ -389,9 +397,9 @@
 //         )}
 //       </form>
 
-//       {/* Table for Project Inventory */}
+//       {/* Table: Current Project Inventory */}
 //       <h2>Current Project Inventory</h2>
-//       <table className={styles.table}>
+//       <table className={styles.table} id="inventory-table">
 //         <thead>
 //           <tr>
 //             <th>Project</th>
@@ -405,50 +413,116 @@
 //             <th>Actions</th>
 //           </tr>
 //         </thead>
-//         {/* // In MaterialsPage.js, find the inventory table body */}
-//    <tbody>
-//   {filteredInventory.length > 0 ? (
-//     filteredInventory.map((item) => {
-//       // ✅ Handle populated OR raw
-//       const project =
-//         typeof item.projectId === "object"
-//           ? item.projectId
-//           : projects.find((p) => p._id.toString() === item.projectId?.toString());
+//         <tbody>
+//           {filteredInventory.length > 0 ? (
+//             filteredInventory.map((item) => {
+//               const project =
+//                 typeof item.projectId === "object"
+//                   ? item.projectId
+//                   : projects.find((p) => p._id.toString() === item.projectId?.toString());
 
-//       const material =
-//         typeof item.materialId === "object"
-//           ? item.materialId
-//           : materials.find((m) => m._id.toString() === item.materialId?.toString());
+//               const material =
+//                 typeof item.materialId === "object"
+//                   ? item.materialId
+//                   : materials.find((m) => m._id.toString() === item.materialId?.toString());
 
-//       return (
-//         <tr key={item._id}>
-//           <td>{project?.name || "Unknown Project"}</td>
-//           <td>{material?.name || "Unknown Material"}</td>
-//           <td>{material?.brand || "N/A"}</td>
-//           <td>{material?.type || "N/A"}</td>
-//           <td>{material?.unit || "N/A"}</td>
-//           <td>{item.quantity}</td>
-//           <td>{item.minLevel}</td>
-//           <td>
-//             {item.quantity < item.minLevel ? "⚠️ Low Stock" : "✅ OK"}
-//           </td>
-//           <td>
-//             <button onClick={() => handleEditInventory(item)}>Edit</button>
-//             <button onClick={() => handleDeleteInventory(item._id)}>Delete</button>
-//           </td>
-//         </tr>
-//       );
-//     })
-//   ) : (
-//     <tr>
-//       <td colSpan={9} style={{ textAlign: "center" }}>
-//         No inventory found
-//       </td>
-//     </tr>
-//   )}
-// </tbody>
-
+//               return (
+//                 <tr key={item._id}>
+//                   <td>{project?.name || "Unknown Project"}</td>
+//                   <td>{material?.name || "Unknown Material"}</td>
+//                   <td>{material?.brand || "N/A"}</td>
+//                   <td>{material?.type || "N/A"}</td>
+//                   <td>{material?.unit || "N/A"}</td>
+//                   <td>{item.quantity}</td>
+//                   <td>{item.minLevel}</td>
+//                   <td>
+//                     {item.quantity < item.minLevel ? "⚠️ Low Stock" : "✅ OK"}
+//                   </td>
+//                   <td>
+//                     <button onClick={() => handleEditInventory(item)}>Edit</button>
+//                     <button onClick={() => handleDeleteInventory(item._id)}>Delete</button>
+//                   </td>
+//                 </tr>
+//               );
+//             })
+//           ) : (
+//             <tr>
+//               <td colSpan="9" style={{ textAlign: "center" }}>
+//                 No inventory found
+//               </td>
+//             </tr>
+//           )}
+//         </tbody>
 //       </table>
+
+//       {/* Mobile Cards: Current Project Inventory */}
+//       <div className={styles.cards} id="inventory-cards">
+//         {filteredInventory.length > 0 ? (
+//           filteredInventory.map((item) => {
+//             const project =
+//               typeof item.projectId === "object"
+//                 ? item.projectId
+//                 : projects.find((p) => p._id.toString() === item.projectId?.toString());
+
+//             const material =
+//               typeof item.materialId === "object"
+//                 ? item.materialId
+//                 : materials.find((m) => m._id.toString() === item.materialId?.toString());
+
+//             return (
+//               <div key={item._id} className={styles.card}>
+//                 <h3>{material?.name || "Unknown"}</h3>
+//                 <div className={styles.cardInfo}>
+//                   <span>🏗️ Project:</span>
+//                   <span>{project?.name || "Unknown"}</span>
+//                 </div>
+//                 <div className={styles.cardInfo}>
+//                   <span>🏷️ Brand:</span>
+//                   <span>{material?.brand || "N/A"}</span>
+//                 </div>
+//                 <div className={styles.cardInfo}>
+//                   <span>🔬 Type:</span>
+//                   <span>{material?.type || "N/A"}</span>
+//                 </div>
+//                 <div className={styles.cardInfo}>
+//                   <span>📦 Unit:</span>
+//                   <span>{material?.unit || "N/A"}</span>
+//                 </div>
+//                 <div className={styles.cardInfo}>
+//                   <span>🔢 Quantity:</span>
+//                   <span>{item.quantity}</span>
+//                 </div>
+//                 <div className={styles.cardInfo}>
+//                   <span>⚠️ Min Level:</span>
+//                   <span>{item.minLevel}</span>
+//                 </div>
+//                 <div className={styles.cardInfo}>
+//                   <span>Status:</span>
+//                   <span
+//                     style={{
+//                       fontWeight: "bold",
+//                       color: item.quantity < item.minLevel ? "#d9534f" : "#5cb85c",
+//                     }}
+//                   >
+//                     {item.quantity < item.minLevel ? "⚠️ Low Stock" : "✅ OK"}
+//                   </span>
+//                 </div>
+//                 <div className={styles.cardActions}>
+//                   <button onClick={() => handleEditInventory(item)}>Edit</button>
+//                   <button
+//                     onClick={() => handleDeleteInventory(item._id)}
+//                     className={styles.deleteBtn}
+//                   >
+//                     Delete
+//                   </button>
+//                 </div>
+//               </div>
+//             );
+//           })
+//         ) : (
+//           <p className={styles.empty}>No inventory found.</p>
+//         )}
+//       </div>
 //     </div>
 //   );
 // }
@@ -458,6 +532,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import styles from "./MaterialsPage.module.css";
+
+const API_URL = import.meta.env.VITE_API_URL; // ✅ Backend base URL
 
 function MaterialsPage() {
   const [materials, setMaterials] = useState([]);
@@ -490,24 +566,20 @@ function MaterialsPage() {
 
   const fetchProjects = () => {
     axios
-      .get("http://localhost:5000/api/projects", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get(`${API_URL}/projects`, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => setProjects(res.data))
       .catch((err) => console.error("Error fetching projects:", err));
   };
 
   const fetchMaterialsCatalog = () => {
     axios
-      .get("http://localhost:5000/api/materials", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get(`${API_URL}/materials`, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => setMaterials(res.data))
       .catch((err) => console.error("Error fetching materials catalog:", err));
   };
 
   const fetchInventory = () => {
-    const url = `http://localhost:5000/api/inventory?t=${Date.now()}`;
+    const url = `${API_URL}/inventory?t=${Date.now()}`;
     axios
       .get(url, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => setInventory(res.data))
@@ -534,12 +606,7 @@ function MaterialsPage() {
   };
 
   const resetInventoryForm = () => {
-    setInventoryForm({
-      projectId: "",
-      materialId: "",
-      quantity: 0,
-      minLevel: 0,
-    });
+    setInventoryForm({ projectId: "", materialId: "", quantity: 0, minLevel: 0 });
     setEditInventoryId(null);
   };
 
@@ -548,11 +615,7 @@ function MaterialsPage() {
     e.preventDefault();
     if (editMaterialId) {
       axios
-        .put(
-          `http://localhost:5000/api/materials/${editMaterialId}`,
-          materialForm,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
+        .put(`${API_URL}/materials/${editMaterialId}`, materialForm, { headers: { Authorization: `Bearer ${token}` } })
         .then(() => {
           fetchMaterialsCatalog();
           resetMaterialForm();
@@ -560,9 +623,7 @@ function MaterialsPage() {
         .catch((err) => console.error("Error updating material:", err));
     } else {
       axios
-        .post("http://localhost:5000/api/materials", materialForm, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        .post(`${API_URL}/materials`, materialForm, { headers: { Authorization: `Bearer ${token}` } })
         .then(() => {
           fetchMaterialsCatalog();
           resetMaterialForm();
@@ -577,33 +638,22 @@ function MaterialsPage() {
 
     if (!inventoryForm.projectId) return alert("Please select a project");
     if (!inventoryForm.materialId) return alert("Please select a material");
-    if (Number(inventoryForm.quantity) <= 0)
-      return alert("Quantity must be greater than 0");
+    if (Number(inventoryForm.quantity) <= 0) return alert("Quantity must be greater than 0");
 
     try {
-      let res;
       if (editInventoryId) {
-        res = await axios.put(
-          `http://localhost:5000/api/inventory/${editInventoryId}`,
-          {
-            quantity: Number(inventoryForm.quantity),
-            minLevel: Number(inventoryForm.minLevel),
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await axios.put(`${API_URL}/inventory/${editInventoryId}`, {
+          quantity: Number(inventoryForm.quantity),
+          minLevel: Number(inventoryForm.minLevel),
+        }, { headers: { Authorization: `Bearer ${token}` } });
       } else {
-        res = await axios.post(
-          "http://localhost:5000/api/inventory",
-          {
-            projectId: inventoryForm.projectId,
-            materialId: inventoryForm.materialId,
-            quantity: Number(inventoryForm.quantity),
-            minLevel: Number(inventoryForm.minLevel),
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await axios.post(`${API_URL}/inventory`, {
+          projectId: inventoryForm.projectId,
+          materialId: inventoryForm.materialId,
+          quantity: Number(inventoryForm.quantity),
+          minLevel: Number(inventoryForm.minLevel),
+        }, { headers: { Authorization: `Bearer ${token}` } });
       }
-
       fetchInventory();
       resetInventoryForm();
     } catch (err) {
@@ -613,12 +663,7 @@ function MaterialsPage() {
   };
 
   const handleEditMaterial = (material) => {
-    setMaterialForm({
-      name: material.name,
-      brand: material.brand,
-      type: material.type,
-      unit: material.unit,
-    });
+    setMaterialForm({ name: material.name, brand: material.brand, type: material.type, unit: material.unit });
     setEditMaterialId(material._id);
   };
 
@@ -634,20 +679,14 @@ function MaterialsPage() {
 
   const handleDeleteMaterial = (id) => {
     if (window.confirm("Delete this material from the catalog?")) {
-      axios
-        .delete(`http://localhost:5000/api/materials/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+      axios.delete(`${API_URL}/materials/${id}`, { headers: { Authorization: `Bearer ${token}` } })
         .then(() => fetchMaterialsCatalog());
     }
   };
 
   const handleDeleteInventory = (id) => {
     if (window.confirm("Delete this inventory record?")) {
-      axios
-        .delete(`http://localhost:5000/api/inventory/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+      axios.delete(`${API_URL}/inventory/${id}`, { headers: { Authorization: `Bearer ${token}` } })
         .then(() => fetchInventory());
     }
   };
@@ -666,7 +705,6 @@ function MaterialsPage() {
       material.brand?.toLowerCase().includes(search.toLowerCase())
     );
   });
-
   return (
     <div className={styles.container}>
       <h1>Material Catalog</h1>

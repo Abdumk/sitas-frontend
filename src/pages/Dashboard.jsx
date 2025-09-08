@@ -1,3 +1,4 @@
+// // src/pages/Dashboard.jsx
 // import React, { useEffect, useState } from 'react';
 // import axios from 'axios';
 // import styles from './Dashboard.module.css';
@@ -69,7 +70,7 @@
 //         </label>
 //       </div>
 
-//       {/* Inventory Table */}
+//       {/* Inventory Table (Desktop) */}
 //       <table className={styles.table}>
 //         <thead>
 //           <tr>
@@ -107,13 +108,57 @@
 //           )}
 //         </tbody>
 //       </table>
+
+//       {/* Inventory Cards (Mobile) */}
+//       <div className={styles.cards}>
+//         {filteredInventory.map((item) => {
+//           const materialName = item.materialId?.name || 'Unknown';
+//           const materialBrand = item.materialId?.brand || 'Unknown';
+//           const materialType = item.materialId?.type || 'Unknown';
+//           const projectName = item.projectId?.name || 'Unknown';
+//           const isLow = item.quantity < item.minLevel;
+
+//           return (
+//             <div key={item._id} className={styles.card}>
+//               <div className={styles.cardHeader}>
+//                 {materialName}
+//               </div>
+//               <div className={styles.cardInfo}>
+//                 <span>Brand:</span>
+//                 <span>{materialBrand}</span>
+//               </div>
+//               <div className={styles.cardInfo}>
+//                 <span>Type:</span>
+//                 <span>{materialType}</span>
+//               </div>
+//               <div className={styles.cardInfo}>
+//                 <span>Project:</span>
+//                 <span>{projectName}</span>
+//               </div>
+//               <div className={styles.cardInfo}>
+//                 <span>Qty / Min:</span>
+//                 <span>{item.quantity} / {item.minLevel}</span>
+//               </div>
+//               <div
+//                 className={styles.cardStatus}
+//                 data-status={isLow ? 'low' : 'ok'}
+//               >
+//                 {isLow ? '⚠️ Low Stock' : '✅ OK'}
+//               </div>
+//             </div>
+//           );
+//         })}
+//         {filteredInventory.length === 0 && (
+//           <p className={styles.emptyState}>
+//             No inventory found.
+//           </p>
+//         )}
+//       </div>
 //     </div>
 //   );
 // }
 
 // export default Dashboard;
-
-// src/pages/Dashboard.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import styles from './Dashboard.module.css';
@@ -123,6 +168,10 @@ function Dashboard() {
   const [search, setSearch] = useState('');
   const [filterLowStock, setFilterLowStock] = useState(false);
 
+  // ✅ Use environment variable for backend API URL
+ const API_URL = import.meta.env.VITE_API_URL; // ✅ Correct for Vite
+
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -131,7 +180,7 @@ function Dashboard() {
     }
 
     axios
-      .get('http://localhost:5000/api/inventory', {
+      .get(`${API_URL}/inventory`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -143,7 +192,7 @@ function Dashboard() {
         console.error('Error fetching inventory:', err);
         alert('Failed to load inventory. Please try again.');
       });
-  }, []);
+  }, [API_URL]);
 
   // Filter and search
   const filteredInventory = inventory.filter((item) => {
@@ -207,9 +256,7 @@ function Dashboard() {
               <td>{item.projectId?.name || 'Unknown Project'}</td>
               <td>{item.quantity}</td>
               <td>{item.minLevel}</td>
-              <td
-                data-status={item.quantity < item.minLevel ? 'low' : 'ok'}
-              >
+              <td data-status={item.quantity < item.minLevel ? 'low' : 'ok'}>
                 {item.quantity < item.minLevel ? '⚠️ Low Stock' : '✅ OK'}
               </td>
             </tr>
@@ -235,9 +282,7 @@ function Dashboard() {
 
           return (
             <div key={item._id} className={styles.card}>
-              <div className={styles.cardHeader}>
-                {materialName}
-              </div>
+              <div className={styles.cardHeader}>{materialName}</div>
               <div className={styles.cardInfo}>
                 <span>Brand:</span>
                 <span>{materialBrand}</span>
@@ -252,7 +297,9 @@ function Dashboard() {
               </div>
               <div className={styles.cardInfo}>
                 <span>Qty / Min:</span>
-                <span>{item.quantity} / {item.minLevel}</span>
+                <span>
+                  {item.quantity} / {item.minLevel}
+                </span>
               </div>
               <div
                 className={styles.cardStatus}
@@ -264,9 +311,7 @@ function Dashboard() {
           );
         })}
         {filteredInventory.length === 0 && (
-          <p className={styles.emptyState}>
-            No inventory found.
-          </p>
+          <p className={styles.emptyState}>No inventory found.</p>
         )}
       </div>
     </div>
