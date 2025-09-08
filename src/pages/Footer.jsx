@@ -1,16 +1,15 @@
-import React from 'react';
-import styles from './Footer.module.css';
+// Footer.jsx
+import { Link } from "react-router-dom";
+import styles from "./Footer.module.css";
 
-function Footer() {
-    return (
-        <footer className={styles.footer}>
-            <p>&copy; {new Date().getFullYear()} SITAS Pro. All rights reserved.</p>
-            <div className={styles.footerLinks}>
-                <a href="/terms" className={styles.link}>Terms of Service</a>
-                <a href="/privacy" className={styles.link}>Privacy Policy</a>
-            </div>
-        </footer>
-    );
+export default function Footer() {
+  return (
+    <footer className={styles.footer}>
+      <p>&copy; {new Date().getFullYear()} SITAS Pro. All rights reserved.</p>
+      <div className={styles.footerLinks}>
+        <Link to="/terms-of-service" className={styles.link}>Terms of Service</Link>
+        <Link to="/privacy-policy" className={styles.link}>Privacy Policy</Link>
+      </div>
+    </footer>
+  );
 }
-
-export default Footer;

@@ -11,6 +11,8 @@ import ReportsPage from './pages/ReportsPage';
 import Layout from './pages/Layout';
 import PublicLayout from './pages/PublicLayout';
 import PrivateRoute from './pages/PrivateRoute';
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
         <Route element={<PublicLayout />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+           <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Route>
 
         {/* Protected Routes inside Layout */}
