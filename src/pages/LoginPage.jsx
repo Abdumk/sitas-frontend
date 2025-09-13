@@ -71,8 +71,17 @@ export default function LoginPage() {
       localStorage.setItem('role', res.data.user.role);
       localStorage.setItem('userName', res.data.user.name);
 
-      // Redirect to dashboard
-      navigate('/dashboard');
+    
+      // Redirect based on role
+if (res.data.user.role === 'admin') {
+  navigate('/dashboard');
+} else if (res.data.user.role === 'storekeeper') {
+  navigate('/materials');
+} else {
+  // worker, engineer, pm
+  navigate('/requests');
+}
+
     } catch (err) {
       alert(err.response?.data?.msg || 'Login failed');
     } finally {
