@@ -1,0 +1,106 @@
+/* Modal overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 12, 20, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+/* Modal box */
+.modal {
+  width: min(1100px, 94%);
+  max-height: 86vh;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f4;
+}
+
+.header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #1f2d3d;
+}
+
+.close {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* Body */
+.body {
+  padding: 14px 18px;
+  overflow: auto;
+  flex: 1 1 auto;
+}
+
+.empty {
+  color: #6b7280;
+  padding: 12px 0;
+}
+
+/* Table */
+.tableWrap {
+  width: 100%;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eef0f4;
+  text-align: left;
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  background: #fafbfc;
+  font-weight: 700;
+  color: #253241;
+}
+
+/* Footer */
+.footer {
+  padding: 12px 18px;
+  border-top: 1px solid #f0f0f4;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #1f6feb;
+  color: #fff;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .modal { width: 96%; }
+  .table th, .table td { padding: 8px; font-size: 12px; }
+}
