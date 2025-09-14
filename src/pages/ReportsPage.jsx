@@ -24,9 +24,9 @@ export default function ReportsPage() {
 
   // UI state
   const [filter, setFilter] = useState({
-    range: "Weekly", // 'Daily' | 'Weekly'
-    category: "All", // All | Projects | Requests | Materials
-    role: "All" // All | Admin | Worker | Engineer | PM | Storekeeper
+    range: "Weekly", // Weekly | LastWeek | Daily | LastDay
+    category: "All",
+    role: "All"
   });
 
   // modal / detail state
@@ -45,7 +45,7 @@ export default function ReportsPage() {
     headers: { Authorization: token ? `Bearer ${token}` : "" }
   }), [token]);
 
-  // Fetch daily & weekly
+  // Fetch daily & weekly once
   useEffect(() => {
     const fetchReports = async () => {
       setLoading(true);
@@ -58,35 +58,67 @@ export default function ReportsPage() {
         setDailyReports(dailyRes.data);
         setWeeklyReports(weeklyRes.data);
       } catch (err) {
-        console.error(err);
+        console.error("fetchReports error:", err);
         setError(err.response?.data?.msg || "Failed to fetch reports");
       } finally {
         setLoading(false);
       }
     };
     fetchReports();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_URL, token]);
 
-  // Helper derived data: choose currently selected range
+  // select dataset to use in charts/tables
   const selected = useMemo(() => {
-    return filter.range === "Daily" ? dailyReports : weeklyReports;
+    if (filter.range === "Daily") return dailyReports;
+    if (filter.range === "LastDay") {
+      // backend doesn't currently provide a 'yesterday' endpoint;
+      // this tries to reuse dailyReports and will be empty unless you fetch yesterday server-side.
+      return dailyReports ? { ...dailyReports, date: "Yesterday", requests: [], transactions: [], stock: dailyReports.stock } : null;
+    }
+    if (filter.range === "Weekly") return weeklyReports;
+    if (filter.range === "LastWeek") {
+      // similar note: frontend-only placeholder
+      return weeklyReports ? { ...weeklyReports, start: "Last Week", end: "Last Week", requests: [], transactions: [], stock: weeklyReports.stock } : null;
+    }
+    return null;
   }, [filter.range, dailyReports, weeklyReports]);
 
-  // Build chart data
+  // helper to flatten/display rows consistently in modal
+  const normalizeRowsForModal = useCallback((rows) => {
+    if (!Array.isArray(rows)) return [];
+    return rows.map((r) => {
+      const flat = {};
+      // if r is primitive, return as single column row
+      if (typeof r !== "object" || r === null) {
+        return { value: String(r) };
+      }
+      Object.keys(r).forEach((k) => {
+        if (k === "id" || k === "_id") return; // hide raw ids
+        const v = r[k];
+        if (typeof v === "object" && v !== null) {
+          // prefer a friendly name if available
+          flat[k] = v.name ?? v.project ?? v._id ?? JSON.stringify(v);
+        } else {
+          flat[k] = v;
+        }
+      });
+      return flat;
+    });
+  }, []);
+
+  // ===== Derived Data for charts =====
   const lowStockData = useMemo(() => {
     const arr = (selected?.stock || []).map(item => ({
       project: item.projectId?.name || 'Unknown',
       projectId: item.projectId?._id || item.projectId,
       material: item.materialId?.name || 'Unknown',
-      quantity: item.quantity || 0,
+      quantity: Number(item.quantity || 0),
       minLevel: item.minLevel ?? item.materialId?.defaultMinLevel ?? 0,
     }));
-    // For chart we want sum per project (or min qty)
     const grouped = {};
     arr.forEach(i => {
-      grouped[i.project] = grouped[i.project] || { project: i.project, projectId: i.projectId, quantity: 0 };
-      // sum quantity across materials in a project (low stock view)
+      grouped[i.project] = grouped[i.project] || { project: i.project, quantity: 0 };
       grouped[i.project].quantity += Number(i.quantity || 0);
     });
     return Object.values(grouped);
@@ -97,8 +129,7 @@ export default function ReportsPage() {
     const grouped = {};
     txs.forEach(t => {
       const name = t.projectId?.name || "Unknown";
-      grouped[name] = grouped[name] || { project: name, projectId: t.projectId?._id || t.projectId, issued: 0 };
-      // For 'issue' type count issued quantities only
+      grouped[name] = grouped[name] || { project: name, issued: 0 };
       if (t.type === "out" || t.type === "issue") grouped[name].issued += Number(t.quantity || 0);
     });
     return Object.values(grouped);
@@ -114,9 +145,8 @@ export default function ReportsPage() {
     ];
   }, [selected]);
 
-  // Filter table rows based on UI filters and userRole
+  // ===== Table rows =====
   const rawRows = useMemo(() => {
-    // Combine everything into a flat "report rows" array (requests + transactions + stock)
     const reqRows = (selected?.requests || []).map(r => ({
       id: r._id,
       type: "Request",
@@ -152,20 +182,14 @@ export default function ReportsPage() {
 
     // Apply category filter
     if (filter.category !== "All") {
-      if (filter.category === "Projects") {
-        combined = combined.filter(r => r.type === "Request" || r.type === "Inventory" || r.type === "Transaction");
-      } else if (filter.category === "Requests") {
-        combined = combined.filter(r => r.type === "Request");
-      } else if (filter.category === "Materials") {
-        combined = combined.filter(r => r.type === "Inventory" || r.type === "Transaction");
-      }
+      if (filter.category === "Requests") combined = combined.filter(r => r.type === "Request");
+      if (filter.category === "Materials") combined = combined.filter(r => r.type === "Inventory" || r.type === "Transaction");
     }
 
-    // Apply role filter (UI filter)
+    // Apply role filter
     if (filter.role !== "All") {
+      const fr = filter.role.toLowerCase();
       combined = combined.filter(r => {
-        // role filter is just an optional UI constraint; we map role to content types
-        const fr = filter.role.toLowerCase();
         if (fr === "storekeeper") return r.type === "Inventory" || r.type === "Transaction";
         if (fr === "worker" || fr === "engineer" || fr === "pm") return r.type === "Request";
         if (fr === "admin") return true;
@@ -173,19 +197,13 @@ export default function ReportsPage() {
       });
     }
 
-    // Apply auth (server-side already limits, but we'll be safe client-side)
+    // Auth restrictions (client-side)
     if (userRole !== "admin" && userRole !== "storekeeper") {
-      // show only requests for non-admin/storekeeper
       combined = combined.filter(r => r.type === "Request");
     }
 
-    // sort by date desc where available
-    combined.sort((a, b) => {
-      const da = new Date(a.date || 0).getTime();
-      const db = new Date(b.date || 0).getTime();
-      return db - da;
-    });
-
+    // sort by date desc
+    combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return combined;
   }, [selected, filter.category, filter.role, userRole]);
 
@@ -199,26 +217,14 @@ export default function ReportsPage() {
     return rawRows.slice(start, start + pageSize);
   }, [rawRows, page]);
 
-  // Handlers to open modal with rows
+  // ===== Modal open helper (normalize rows) =====
   const openDetailModal = useCallback((title, rows) => {
-    // normalize rows: prefer primitive-friendly values and consistent keys
-    const normalized = rows.map(r => {
-      // flatten small objects for display
-      const flat = {};
-      for (const k of Object.keys(r)) {
-        const v = r[k];
-        if (typeof v === "object" && v !== null && (v.name || v.project || v._id)) {
-          flat[k] = v.name || v.project || v._id || JSON.stringify(v);
-        } else {
-          flat[k] = v;
-        }
-      }
-      return flat;
-    });
-    setModalTitle(title);
+    console.log("openDetailModal called:", title, rows?.length ?? 0);
+    const normalized = normalizeRowsForModal(rows || []);
+    setModalTitle(title || "Details");
     setModalRows(normalized);
     setModalOpen(true);
-  }, []);
+  }, [normalizeRowsForModal]);
 
   const closeModal = () => {
     setModalOpen(false);
@@ -226,25 +232,32 @@ export default function ReportsPage() {
     setModalTitle("");
   };
 
-  // Chart click handlers
-  const handleLowStockBarClick = (data, index) => {
-    if (!data || !data.project) return;
-    const project = data.project;
+  // ===== Chart click handlers (robust payload handling) =====
+  const handleLowStockBarClick = useCallback((data, index) => {
+    // Recharts may pass an entry object or object with .payload
+    console.log("lowStock bar click:", data, index);
+    const entry = data?.payload ?? data;
+    const project = entry?.project ?? entry;
+    if (!project) return;
     const rows = (selected?.stock || [])
       .filter(s => (s.projectId?.name || s.projectId) === project)
       .map(s => ({
-        material: s.materialId?.name || s.materialId || "Unknown",
+        project: s.projectId?.name || "",
+        material: s.materialId?.name || "",
         quantity: s.quantity,
-        minLevel: s.minLevel
+        minLevel: s.minLevel ?? s.materialId?.defaultMinLevel ?? 0
       }));
     openDetailModal(`Low stock — ${project}`, rows);
-  };
+  }, [openDetailModal, selected]);
 
-  const handleIssuedDotClick = (data) => {
-    // activeDot passes payload with payload.project
-    const project = data?.payload?.project;
+  const handleIssuedDotClick = useCallback((data) => {
+    // data might be { payload: {...} } or the payload directly
+    console.log("issued dot click:", data);
+    const payload = data?.payload ?? data;
+    const project = payload?.project ?? payload;
     if (!project) return;
-    const rows = (selected?.transactions || []).filter(t => (t.projectId?.name || t.projectId) === project)
+    const rows = (selected?.transactions || [])
+      .filter(t => (t.projectId?.name || t.projectId) === project)
       .map(t => ({
         id: t._id,
         material: t.materialId?.name,
@@ -254,16 +267,14 @@ export default function ReportsPage() {
         by: t.issuedById?.name || ""
       }));
     openDetailModal(`Issued Materials — ${project}`, rows);
-  };
+  }, [openDetailModal, selected]);
 
-  const handlePieClick = (entry) => {
-    const name = entry?.name;
+  const handlePieClick = useCallback((entry) => {
+    console.log("pie click:", entry);
+    const name = entry?.name ?? entry?.payload?.name ?? entry?.payload?.payload?.name;
     if (!name) return;
     const key = name.toLowerCase() === "approved" ? "approved" : "rejected";
-    const rows = (selected?.requests || []).filter(r => {
-      // normalize backend statuses: 'approved' vs various pending states
-      return r.status === key;
-    }).map(r => ({
+    const rows = (selected?.requests || []).filter(r => r.status === key).map(r => ({
       id: r._id,
       project: r.projectId?.name,
       requestedBy: r.requestedById?.name,
@@ -271,9 +282,9 @@ export default function ReportsPage() {
       date: new Date(r.createdAt).toLocaleString()
     }));
     openDetailModal(`${name} Requests`, rows);
-  };
+  }, [openDetailModal, selected]);
 
-  // Card clicks
+  // Card clicks (summary cards)
   const onCardClick = (cardKey) => {
     if (!selected) return;
     if (cardKey === "requests") {
@@ -306,12 +317,11 @@ export default function ReportsPage() {
     }
   };
 
-  // Row click => show that row's details
+  // Row click => show details
   const handleRowClick = (row) => {
+    console.log("row clicked:", row);
     const r = row.details || row;
-    // Provide a friendly rows object by type
     if (row.type === "Request" || r.materials) {
-      // Show request details
       const rows = [{
         id: r._id,
         project: r.projectId?.name,
@@ -346,20 +356,16 @@ export default function ReportsPage() {
     }
   };
 
-  // CSV export
+  // CSV export (for entire table view)
   const exportToCsv = (rows, filename = "reports.csv") => {
-    if (!rows || rows.length === 0) {
+    if (!rows || !rows.length) {
       alert("No rows to export");
       return;
     }
     const keys = Object.keys(rows[0]);
     const csv = [
       keys.join(","),
-      ...rows.map(r => keys.map(k => {
-        const v = r[k];
-        const safe = typeof v === "string" ? v.replace(/"/g, '""') : String(v ?? "");
-        return `"${safe}"`;
-      }).join(","))
+      ...rows.map(r => keys.map(k => `"${String(r[k] ?? "").replace(/"/g, '""')}"`).join(","))
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -374,7 +380,7 @@ export default function ReportsPage() {
   if (loading) return <div className={styles.container}><p className={styles.loading}>Loading reports...</p></div>;
   if (error) return <div className={styles.container}><p className={styles.error}>{error}</p></div>;
 
-  // summary counts (friendly)
+  // friendly totals
   const totals = {
     requests: selected?.requests?.length || 0,
     transactions: selected?.transactions?.length || 0,
@@ -388,7 +394,9 @@ export default function ReportsPage() {
         <div className={styles.controls}>
           <select value={filter.range} onChange={(e) => setFilter({ ...filter, range: e.target.value })}>
             <option value="Weekly">This Week</option>
+            <option value="LastWeek">Last Week</option>
             <option value="Daily">Today</option>
+            <option value="LastDay">Yesterday</option>
           </select>
 
           <select value={filter.category} onChange={(e) => setFilter({ ...filter, category: e.target.value })}>
@@ -442,7 +450,7 @@ export default function ReportsPage() {
               <XAxis dataKey="project" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="quantity" onClick={handleLowStockBarClick}>
+              <Bar dataKey="quantity" onClick={(data, idx) => handleLowStockBarClick(data, idx)}>
                 {lowStockData.map((entry, idx) => (
                   <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
                 ))}
@@ -460,8 +468,14 @@ export default function ReportsPage() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="issued" stroke="#2196f3" strokeWidth={2}
-                activeDot={{ onClick: handleIssuedDotClick }} />
+              {/* activeDot onClick may pass a payload; use our robust handler */}
+              <Line
+                type="monotone"
+                dataKey="issued"
+                stroke="#2196f3"
+                strokeWidth={2}
+                activeDot={{ onClick: (e) => handleIssuedDotClick(e) }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -505,7 +519,6 @@ export default function ReportsPage() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>ID</th>
               <th>Type</th>
               <th>Project</th>
               <th>Summary</th>
@@ -515,7 +528,7 @@ export default function ReportsPage() {
           </thead>
           <tbody>
             {visibleRows.length === 0 && (
-              <tr><td colSpan="6" className={styles.emptyRow}>No records available</td></tr>
+              <tr><td colSpan="5" className={styles.emptyRow}>No records available</td></tr>
             )}
             {visibleRows.map((r) => (
               <tr
@@ -525,9 +538,8 @@ export default function ReportsPage() {
                 tabIndex={0}
                 role="button"
                 className={styles.row}
-                aria-label={`Open ${r.type} ${r.id}`}
+                aria-label={`Open ${r.type}`}
               >
-                <td>{String(r.id).slice(0, 8)}</td>
                 <td>{r.type}</td>
                 <td>{r.project}</td>
                 <td>{r.type === "Request" ? (r.requestedBy || "") : (r.material || "")}</td>

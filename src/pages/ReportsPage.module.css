@@ -43,6 +43,7 @@
   background: #fff;
   cursor: pointer;
   font-weight: 600;
+  color: #000;
 }
 
 /* Summary cards */
@@ -101,6 +102,10 @@
   }
 }
 
+
+/* Keep table min-width so it doesn't shrink too much */
+
+
 /* Table wrapper and table */
 .tableWrapper {
   background: #fff;
@@ -108,6 +113,7 @@
   border-radius: 12px;
   box-shadow: 0 8px 22px rgba(10, 12, 20, 0.04);
   margin-bottom: 30px;
+    overflow-x: auto;
 }
 
 .tableHeader {
@@ -120,6 +126,8 @@
 .table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 13px;
+  min-width: 600px; /* 👈 ensures all columns fit side by side */
   font-size: 13px;
 }
 
@@ -154,7 +162,7 @@
 .badge {
   display: inline-block;
   padding: 6px 8px;
-  background: #eef3ff;
+  background: #fff2ee;
   color: #2c6ef2;
   border-radius: 8px;
   font-weight: 700;
@@ -172,7 +180,7 @@
   padding: 6px 8px;
   border-radius: 6px;
   border: 1px solid #e6e9ef;
-  background: #fff;
+  background: #040000;
   cursor: pointer;
 }
 
@@ -188,4 +196,15 @@
   .header { flex-direction: column; align-items: flex-start; gap: 8px; }
   .controls { flex-wrap: wrap; }
   .charts { grid-template-columns: 1fr; }
+
+   .tableWrapper {
+    padding: 8px;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
 }
+
